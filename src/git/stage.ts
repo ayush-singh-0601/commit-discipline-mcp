@@ -1,4 +1,5 @@
-import { readFile } from "node:fs/promises";
+import { copyFile, mkdtemp, rm } from "node:fs/promises";
+import os from "node:os";
 import path from "node:path";
 import type { CommitDisciplineConfig } from "../config.js";
 import { DisciplineError } from "../errors.js";
@@ -68,25 +69,32 @@ export async function inspectStageDiff(repoRoot: string, selectedFiles: readonly
   await assertStageScope(repoRoot, selectedFiles);
   const statuses = (await getStatus(repoRoot)).filter((entry) => !isInternalStatePath(entry.path));
   const files = [...new Set(statuses.map((entry) => entry.path))].sort();
-  const tracked = await runGit(repoRoot, ["diff", "--numstat", "HEAD", "--", ...selectedFiles]);
-  const totals = parseNumstat(tracked.stdout);
-
-  for (const entry of statuses.filter((status) => status.indexStatus === "?" && status.workTreeStatus === "?")) {
-    const contents = await readFile(path.join(repoRoot, ...entry.path.split("/")));
-    if (contents.includes(0)) {
-      totals.binaryFiles += 1;
-      continue;
-    }
-    if (contents.length > 0) {
-      let lines = 0;
-      for (const byte of contents) if (byte === 10) lines += 1;
-      if (contents.at(-1) !== 10) lines += 1;
-      totals.additions += lines;
-      totals.lines += lines;
-    }
+  const untracked = statuses
+    .filter((status) => status.indexStatus === "?" && status.workTreeStatus === "?")
+    .map((status) => status.path);
+  if (untracked.length === 0) {
+    const diff = await runGit(repoRoot, ["diff", "--numstat", "HEAD", "--", ...selectedFiles]);
+    return { files, ...parseNumstat(diff.stdout) };
   }
 
-  return { files, ...totals };
+  const temporary = await mkdtemp(path.join(os.tmpdir(), "commit-discipline-index-"));
+  const temporaryIndex = path.join(temporary, "index");
+  try {
+    const indexResult = await runGit(repoRoot, ["rev-parse", "--git-path", "index"]);
+    const indexPath = path.resolve(repoRoot, indexResult.stdout.trim());
+    await copyFile(indexPath, temporaryIndex);
+    const env = { ...process.env, GIT_INDEX_FILE: temporaryIndex };
+    await runGit(repoRoot, ["add", "--intent-to-add", "--", ...untracked], true, env);
+    const diff = await runGit(
+      repoRoot,
+      ["diff", "--numstat", "HEAD", "--", ...selectedFiles],
+      true,
+      env,
+    );
+    return { files, ...parseNumstat(diff.stdout) };
+  } finally {
+    await rm(temporary, { recursive: true, force: true });
+  }
 }
 
 export function evaluateDiffLimits(

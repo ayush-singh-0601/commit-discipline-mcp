@@ -13,13 +13,16 @@ export async function runGit(
   repoRoot: string,
   args: readonly string[],
   rejectOnNonZero = true,
+  env?: NodeJS.ProcessEnv,
 ): Promise<CommandResult> {
   try {
-    return await runCommand("git", args, {
+    const options = {
       cwd: repoRoot,
       rejectOnNonZero,
       timeoutMs: 30_000,
-    });
+      ...(env ? { env } : {}),
+    };
+    return await runCommand("git", args, options);
   } catch (error) {
     if (error instanceof DisciplineError) {
       throw new DisciplineError(

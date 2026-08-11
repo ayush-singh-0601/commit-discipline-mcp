@@ -1,4 +1,4 @@
-import { mkdir, writeFile } from "node:fs/promises";
+import { mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { afterEach, describe, it } from "node:test";
 import { expect } from "expect";
@@ -25,11 +25,28 @@ describe("safe stage inspection", () => {
     await mkdir(path.join(repository.root, "src"), { recursive: true });
     await writeFile(path.join(repository.root, "baseline.txt"), "baseline\nchanged\n", "utf8");
     await writeFile(path.join(repository.root, "src", "new & file.txt"), "one\ntwo\n", "utf8");
+    await writeFile(path.join(repository.root, "src", "crlf.txt"), "one\r\ntwo\r\n", "utf8");
+    await writeFile(path.join(repository.root, "src", "binary.bin"), Buffer.from([0, 1, 2, 3]));
+    const indexLocation = await runGit(repository.root, ["rev-parse", "--git-path", "index"]);
+    const realIndex = path.resolve(repository.root, indexLocation.stdout.trim());
+    const indexBefore = await readFile(realIndex);
 
-    const diff = await inspectStageDiff(repository.root, ["baseline.txt", "src/new & file.txt"]);
-    expect(diff).toMatchObject({ files: ["baseline.txt", "src/new & file.txt"], additions: 3 });
+    const diff = await inspectStageDiff(repository.root, [
+      "baseline.txt",
+      "src/new & file.txt",
+      "src/crlf.txt",
+      "src/binary.bin",
+    ]);
+    expect(diff).toMatchObject({ additions: 5, deletions: 0, lines: 5, binaryFiles: 1 });
+    expect(diff.files).toEqual([
+      "baseline.txt",
+      "src/binary.bin",
+      "src/crlf.txt",
+      "src/new & file.txt",
+    ]);
     const staged = await runGit(repository.root, ["diff", "--cached", "--name-only"]);
     expect(staged.stdout).toBe("");
+    expect(await readFile(realIndex)).toEqual(indexBefore);
   });
 
   it("rejects unrelated working-tree changes", async () => {
