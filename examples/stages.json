@@ -1,0 +1,20 @@
+[
+  {
+    "id": "implementation",
+    "title": "Implement the feature",
+    "description": "Add the smallest production change that delivers the behavior",
+    "files": ["src/feature.ts"]
+  },
+  {
+    "id": "tests",
+    "title": "Add regression coverage",
+    "description": "Prove the behavior and protect the edge cases",
+    "files": ["tests/feature.test.ts"]
+  },
+  {
+    "id": "docs",
+    "title": "Document the feature",
+    "description": "Update user-facing setup and usage guidance",
+    "files": ["README.md"]
+  }
+]

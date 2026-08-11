@@ -1,0 +1,12 @@
+{
+  "schemaVersion": 1,
+  "enforcement": "strict",
+  "maxFiles": 10,
+  "maxLines": 300,
+  "testTimeoutMs": 900000,
+  "planVisibility": "local",
+  "testCommand": {
+    "command": "npm",
+    "args": ["test"]
+  }
+}
