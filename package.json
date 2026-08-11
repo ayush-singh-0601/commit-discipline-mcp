@@ -2,8 +2,27 @@
   "name": "commit-discipline-mcp",
   "version": "0.1.0",
   "description": "Plan and enforce small, test-gated Git commits through MCP or a CLI.",
+  "keywords": [
+    "mcp",
+    "git",
+    "cli",
+    "coding-agents",
+    "commit-workflow"
+  ],
+  "author": "Ayush Singh",
   "type": "module",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ayush-singh-0601/commit-discipline-mcp.git"
+  },
+  "homepage": "https://github.com/ayush-singh-0601/commit-discipline-mcp#readme",
+  "bugs": {
+    "url": "https://github.com/ayush-singh-0601/commit-discipline-mcp/issues"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
   "engines": {
     "node": ">=18"
   },
@@ -18,6 +37,7 @@
     "bin",
     "dist",
     "assets",
+    "CHANGELOG.md",
     "LICENSE",
     "README.md"
   ],
