@@ -1,7 +1,7 @@
 import { loadConfig, resolveStageLimits } from "../config.js";
 import { commitStageInputSchema, type CommitStageInput, type PlanState } from "../domain/schemas.js";
 import { DisciplineError } from "../errors.js";
-import { discoverRepoRoot, getHeadCommit, normalizeRepoPath } from "../git/repository.js";
+import { discoverRepoRoot, discoverRepositoryContext, getHeadCommit, normalizeRepoPath } from "../git/repository.js";
 import {
   commitStagedFiles,
   evaluateDiffLimits,
@@ -33,9 +33,9 @@ function expectedHead(plan: PlanState): string {
   return completed.at(-1)?.commitHash ?? plan.baseCommit;
 }
 
-async function assertHeadContinuity(repoRoot: string, plan: PlanState): Promise<void> {
+async function assertHeadContinuity(repoRoot: string, plan: PlanState, knownHead?: string): Promise<void> {
   const expected = expectedHead(plan);
-  const actual = await getHeadCommit(repoRoot);
+  const actual = knownHead ?? (await getHeadCommit(repoRoot));
   if (actual !== expected) {
     throw new DisciplineError(
       "INVALID_PLAN",
@@ -50,12 +50,13 @@ export async function commitStage(
   options: CommitStageOptions = {},
 ): Promise<CommitStageResult> {
   const validated = commitStageInputSchema.parse(input);
-  const repoRoot = await discoverRepoRoot(options.cwd);
+  const repository = await discoverRepositoryContext(options.cwd);
+  const repoRoot = repository.repoRoot;
   const plan = await readPlanState(repoRoot);
   if (plan.status !== "active") {
     throw new DisciplineError("NO_ACTIVE_PLAN", "The stored plan is already finished.");
   }
-  await assertHeadContinuity(repoRoot, plan);
+  await assertHeadContinuity(repoRoot, plan, repository.headCommit);
 
   const stage = plan.stages.find((candidate) => candidate.status === "pending");
   if (!stage || stage.id !== validated.stage) {
@@ -97,7 +98,7 @@ export async function commitStage(
   }
   const test = await runTests(repoRoot, config);
 
-  const finalDiff = await inspectStageDiff(repoRoot, selectedFiles);
+  const finalDiff = test.status === "not-found" ? initialDiff : await inspectStageDiff(repoRoot, selectedFiles);
   const limitEvaluation = evaluateDiffLimits(finalDiff, { ...limits, enforcement: config.enforcement });
   await stageFiles(repoRoot, selectedFiles);
   const commitHash = await commitStagedFiles(repoRoot, validated.message);

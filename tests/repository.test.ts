@@ -5,6 +5,7 @@ import { expect } from "expect";
 import { DisciplineError } from "../src/errors.js";
 import {
   discoverRepoRoot,
+  discoverRepositoryContext,
   getHeadCommit,
   getStatus,
   isWorktreeClean,
@@ -33,6 +34,10 @@ describe("portable process and repository primitives", () => {
     await mkdir(nested, { recursive: true });
 
     await expect(discoverRepoRoot(nested)).resolves.toBe(await realpath(repository.root));
+    await expect(discoverRepositoryContext(nested)).resolves.toMatchObject({
+      repoRoot: await realpath(repository.root),
+      headCommit: expect.stringMatching(/^[0-9a-f]{40}$/),
+    });
     await expect(getHeadCommit(repository.root)).resolves.toMatch(/^[0-9a-f]{40}$/);
   });
 

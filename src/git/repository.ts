@@ -9,6 +9,11 @@ export interface GitStatusEntry {
   originalPath?: string;
 }
 
+export interface RepositoryContext {
+  repoRoot: string;
+  headCommit: string;
+}
+
 export async function runGit(
   repoRoot: string,
   args: readonly string[],
@@ -51,6 +56,22 @@ export async function discoverRepoRoot(cwd = process.cwd()): Promise<string> {
   }
 
   return path.resolve(result.stdout.trim());
+}
+
+export async function discoverRepositoryContext(cwd = process.cwd()): Promise<RepositoryContext> {
+  const result = await runCommand("git", ["rev-parse", "--show-toplevel", "HEAD"], {
+    cwd,
+    rejectOnNonZero: false,
+  });
+  const [root, headCommit] = result.stdout.trim().split(/\r?\n/);
+  if (result.exitCode !== 0 || !root || !headCommit || !/^[0-9a-f]{40}$/.test(headCommit)) {
+    throw new DisciplineError(
+      "NOT_GIT_REPOSITORY",
+      `No Git repository with an initial commit found from ${cwd}.`,
+      { cwd, stderr: result.stderr },
+    );
+  }
+  return { repoRoot: path.resolve(root), headCommit };
 }
 
 export async function getHeadCommit(repoRoot: string): Promise<string> {

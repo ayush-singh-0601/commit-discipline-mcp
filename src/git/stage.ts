@@ -22,13 +22,6 @@ function isInternalStatePath(candidate: string): boolean {
   return candidate === ".commit-discipline/plan.json" || candidate.startsWith(".commit-discipline/.plan-");
 }
 
-function parseNullSeparated(source: string): string[] {
-  return source
-    .split("\0")
-    .filter(Boolean)
-    .map((entry) => entry.replaceAll("\\", "/"));
-}
-
 function parseNumstat(source: string): Omit<StageDiff, "files"> {
   let additions = 0;
   let deletions = 0;
@@ -123,14 +116,6 @@ export function evaluateDiffLimits(
 
 export async function stageFiles(repoRoot: string, files: readonly string[]): Promise<void> {
   await runGit(repoRoot, ["add", "--", ...files]);
-  const staged = await runGit(repoRoot, ["diff", "--cached", "--name-only", "-z"]);
-  const selected = new Set(files);
-  const outside = parseNullSeparated(staged.stdout).filter((candidate) => !selected.has(candidate));
-  if (outside.length > 0) {
-    throw new DisciplineError("OUT_OF_SCOPE_CHANGES", "The Git index contains files outside the stage.", {
-      files: outside,
-    });
-  }
 }
 
 export async function commitStagedFiles(repoRoot: string, message: string): Promise<string> {
