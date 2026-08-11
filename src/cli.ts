@@ -2,6 +2,7 @@ import { readFile } from "node:fs/promises";
 import path from "node:path";
 import { commitStageInputSchema, type PlanTaskInput } from "./domain/schemas.js";
 import { DisciplineError } from "./errors.js";
+import { initializeClients, type ClientName, type InitOptions } from "./init/init-service.js";
 import { planTask, taskStatus } from "./service/plan-service.js";
 import { commitStage, finishTask } from "./service/stage-service.js";
 
@@ -9,6 +10,7 @@ export interface CliIo {
   cwd: string;
   stdout: (text: string) => void;
   stderr: (text: string) => void;
+  confirm?: (prompt: string) => Promise<boolean>;
 }
 
 const HELP = `commit-discipline
@@ -26,6 +28,15 @@ function defaultIo(): CliIo {
     cwd: process.cwd(),
     stdout: (text) => process.stdout.write(text),
     stderr: (text) => process.stderr.write(text),
+    confirm: async (prompt) => {
+      const { createInterface } = await import("node:readline/promises");
+      const readline = createInterface({ input: process.stdin, output: process.stderr });
+      try {
+        return (await readline.question(prompt)).trim().toLowerCase() === "y";
+      } finally {
+        readline.close();
+      }
+    },
   };
 }
 
@@ -123,7 +134,29 @@ export async function runCli(args: readonly string[], io: CliIo = defaultIo()): 
     }
 
     if (command === "init") {
-      throw new Error("Client initialization is not available until the integration adapter is installed.");
+      const requested = optionValues(rest, "--client");
+      const clients = (requested.includes("all") ? ["codex", "claude", "cursor"] : requested) as ClientName[];
+      const common: InitOptions = {
+        cwd: io.cwd,
+        force: rest.includes("--force"),
+      };
+      if (clients.length > 0) common.clients = clients;
+      if (rest.includes("--dry-run")) {
+        const result = await initializeClients({ ...common, dryRun: true });
+        writeResult(io, result, true, "");
+        return 0;
+      }
+      if (!rest.includes("--yes")) {
+        const preview = await initializeClients({ ...common, dryRun: true });
+        io.stdout(`${JSON.stringify(preview, null, 2)}\n`);
+        if (!io.confirm || !(await io.confirm("Apply these project configuration changes? [y/N] "))) {
+          io.stderr("Initialization cancelled.\n");
+          return 1;
+        }
+      }
+      const result = await initializeClients({ ...common, dryRun: false });
+      writeResult(io, result, rest.includes("--json"), `Configured: ${result.clients.join(", ")}.`);
+      return 0;
     }
 
     throw new Error(`Unknown command: ${command}.`);
