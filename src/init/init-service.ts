@@ -1,4 +1,5 @@
 import { access, copyFile, mkdir, readFile, writeFile } from "node:fs/promises";
+import { homedir } from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { loadConfig } from "../config.js";
@@ -175,7 +176,7 @@ async function updateGitignore(
 
 export async function initializeClients(options: InitOptions = {}): Promise<InitResult> {
   const repoRoot = await discoverRepoRoot(options.cwd);
-  const homeDirectory = options.homeDirectory ?? process.env.USERPROFILE ?? process.env.HOME ?? repoRoot;
+  const homeDirectory = options.homeDirectory ?? homedir();
   const selected = options.clients ?? (await detectClients(repoRoot, homeDirectory));
   const clients = [...new Set(selected)];
   if (clients.length === 0) {
