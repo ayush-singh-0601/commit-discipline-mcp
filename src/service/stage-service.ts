@@ -11,7 +11,7 @@ import {
   type StageDiff,
 } from "../git/stage.js";
 import { readPlanState, writePlanState } from "../state/plan-store.js";
-import { runTests, type TestRunResult } from "../test-runner/test-runner.js";
+import { previewTests, runTests, type TestRunResult } from "../test-runner/test-runner.js";
 import { getUserChanges } from "./plan-service.js";
 
 export interface CommitStageOptions {
@@ -21,7 +21,8 @@ export interface CommitStageOptions {
 
 export interface CommitStageResult {
   stage: string;
-  commitHash: string;
+  commitHash: string | null;
+  dryRun: boolean;
   message: string;
   diff: StageDiff;
   test: TestRunResult;
@@ -50,9 +51,6 @@ export async function commitStage(
   options: CommitStageOptions = {},
 ): Promise<CommitStageResult> {
   const validated = commitStageInputSchema.parse(input);
-  if (validated.dryRun) {
-    throw new DisciplineError("INVALID_PLAN", "Dry-run support is not enabled in the P0 workflow.");
-  }
   const repoRoot = await discoverRepoRoot(options.cwd);
   const plan = await readPlanState(repoRoot);
   if (plan.status !== "active") {
@@ -85,7 +83,19 @@ export async function commitStage(
   const limits = resolveStageLimits(config, overrides);
 
   const initialDiff = await inspectStageDiff(repoRoot, selectedFiles);
-  evaluateDiffLimits(initialDiff, { ...limits, enforcement: config.enforcement });
+  const initialLimits = evaluateDiffLimits(initialDiff, { ...limits, enforcement: config.enforcement });
+  if (validated.dryRun) {
+    const test = await previewTests(repoRoot, config);
+    return {
+      stage: stage.id,
+      commitHash: null,
+      dryRun: true,
+      message: validated.message,
+      diff: initialDiff,
+      test,
+      warnings: [...test.warnings, ...initialLimits.warnings],
+    };
+  }
   const test = await runTests(repoRoot, config);
 
   await assertStageScope(repoRoot, selectedFiles);
@@ -105,6 +115,7 @@ export async function commitStage(
   return {
     stage: stage.id,
     commitHash,
+    dryRun: false,
     message: validated.message,
     diff: finalDiff,
     test,

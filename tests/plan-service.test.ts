@@ -1,6 +1,7 @@
 import { writeFile } from "node:fs/promises";
 import path from "node:path";
-import { afterEach, describe, expect, it } from "vitest";
+import { afterEach, describe, it } from "node:test";
+import { expect } from "expect";
 import type { PlanTaskInput } from "../src/domain/schemas.js";
 import { DisciplineError } from "../src/errors.js";
 import { planTask, taskStatus } from "../src/service/plan-service.js";
@@ -97,5 +98,17 @@ describe("plan lifecycle", () => {
     await expect(planTask(input, { cwd: repository.root })).rejects.toMatchObject({
       code: "INVALID_PLAN",
     } satisfies Partial<DisciplineError>);
+  });
+
+  it("warns when a file overlaps multiple stages", async () => {
+    const repository = await createTestRepository();
+    repositories.push(repository);
+    const input = validPlan();
+    input.stages[1]?.files.push("src/core.ts");
+
+    const plan = await planTask(input, { cwd: repository.root });
+    expect(plan.warnings).toEqual([
+      "File src/core.ts is declared in multiple stages: core, tests.",
+    ]);
   });
 });

@@ -72,6 +72,18 @@ export async function planTask(
     return { ...stage, files, status: "pending" as const };
   });
 
+  const owners = new Map<string, string[]>();
+  for (const stage of stages) {
+    for (const file of stage.files) {
+      const existingOwners = owners.get(file) ?? [];
+      existingOwners.push(stage.id);
+      owners.set(file, existingOwners);
+    }
+  }
+  const warnings = [...owners.entries()]
+    .filter(([, stageIds]) => stageIds.length > 1)
+    .map(([file, stageIds]) => `File ${file} is declared in multiple stages: ${stageIds.join(", ")}.`);
+
   const state: PlanState = {
     schemaVersion: 1,
     status: "active",
@@ -80,6 +92,7 @@ export async function planTask(
     createdAt: (options.now?.() ?? new Date()).toISOString(),
     stages,
   };
+  if (warnings.length > 0) state.warnings = warnings;
   await writePlanState(repoRoot, state);
   return state;
 }

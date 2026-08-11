@@ -1,6 +1,7 @@
-import { writeFile } from "node:fs/promises";
+import { readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
-import { afterEach, describe, expect, it } from "vitest";
+import { afterEach, describe, it } from "node:test";
+import { expect } from "expect";
 import type { PlanTaskInput } from "../src/domain/schemas.js";
 import { DisciplineError } from "../src/errors.js";
 import { getHeadCommit, runGit } from "../src/git/repository.js";
@@ -115,5 +116,27 @@ describe("stage commit lifecycle", () => {
     await expect(
       commitStage({ stage: "feature", message: "feat: feature" }, { cwd: repository.root }),
     ).rejects.toMatchObject({ code: "INVALID_PLAN" } satisfies Partial<DisciplineError>);
+  });
+
+  it("previews a stage without running tests, staging files, or changing state", async () => {
+    const repository = await createTestRepository();
+    repositories.push(repository);
+    await commitConfig(repository, "require('node:fs').writeFileSync('test-ran.txt', 'bad')");
+    await planTask(planInput(), { cwd: repository.root });
+    const headBefore = await getHeadCommit(repository.root);
+    await writeFile(path.join(repository.root, "feature.txt"), "feature\n", "utf8");
+
+    const preview = await commitStage(
+      { stage: "feature", message: "feat: preview", dryRun: true },
+      { cwd: repository.root },
+    );
+    expect(preview).toMatchObject({ dryRun: true, commitHash: null, test: { status: "not-run" } });
+    await expect(getHeadCommit(repository.root)).resolves.toBe(headBefore);
+    await expect(taskStatus(repository.root)).resolves.toMatchObject({ currentStage: "feature" });
+    const staged = await runGit(repository.root, ["diff", "--cached", "--name-only"]);
+    expect(staged.stdout).toBe("");
+    await expect(readFile(path.join(repository.root, "test-ran.txt"), "utf8")).rejects.toMatchObject({
+      code: "ENOENT",
+    });
   });
 });

@@ -1,6 +1,7 @@
 import { readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
-import { afterEach, describe, expect, it } from "vitest";
+import { afterEach, describe, it } from "node:test";
+import { expect } from "expect";
 import { DisciplineError } from "../src/errors.js";
 import { initializeClients } from "../src/init/init-service.js";
 import { createTestRepository, type TestRepository } from "./helpers/git.js";

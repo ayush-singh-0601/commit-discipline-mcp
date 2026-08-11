@@ -40,4 +40,16 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
-      - run: npm pack --dry-run
+      - run: npm run smoke:package
+      - if: runner.os == 'Windows'
+        shell: pwsh
+        run: node bin/commit-discipline.js --help
+      - if: runner.os == 'Windows'
+        shell: cmd
+        run: node bin\commit-discipline.js --help
+      - if: runner.os == 'Linux'
+        shell: bash
+        run: node bin/commit-discipline.js --help
+      - if: runner.os == 'macOS'
+        shell: zsh {0}
+        run: node bin/commit-discipline.js --help

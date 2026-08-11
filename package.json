@@ -24,8 +24,9 @@
   "scripts": {
     "build": "tsc -p tsconfig.build.json",
     "typecheck": "tsc -p tsconfig.json --noEmit",
-    "test": "vitest run --passWithNoTests",
+    "test": "node scripts/run-tests.mjs",
     "verify": "npm run typecheck && npm test && npm run build",
+    "smoke:package": "node scripts/package-smoke.mjs",
     "prepack": "npm run build"
   },
   "dependencies": {
@@ -34,7 +35,8 @@
   },
   "devDependencies": {
     "@types/node": "18.19.130",
-    "typescript": "5.9.3",
-    "vitest": "2.1.9"
+    "@types/jest": "29.5.14",
+    "expect": "29.7.0",
+    "typescript": "5.9.3"
   }
 }

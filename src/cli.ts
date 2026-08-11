@@ -111,7 +111,10 @@ export async function runCli(args: readonly string[], io: CliIo = defaultIo()): 
       if (maxLines !== undefined) raw.maxLines = maxLines;
       if (rest.includes("--dry-run")) raw.dryRun = true;
       const result = await commitStage(commitStageInputSchema.parse(raw), { cwd: io.cwd });
-      writeResult(io, result, rest.includes("--json"), `Committed ${stage} as ${result.commitHash.slice(0, 12)}.`);
+      const summary = result.dryRun
+        ? `Dry run: ${result.diff.files.length} files and ${result.diff.lines} lines; no changes written.`
+        : `Committed ${stage} as ${result.commitHash?.slice(0, 12)}.`;
+      writeResult(io, result, rest.includes("--json"), summary);
       for (const warning of result.warnings) io.stderr(`warning: ${warning}\n`);
       return 0;
     }

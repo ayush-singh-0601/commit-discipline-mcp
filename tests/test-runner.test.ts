@@ -1,6 +1,7 @@
 import { writeFile } from "node:fs/promises";
 import path from "node:path";
-import { afterEach, describe, expect, it } from "vitest";
+import { afterEach, describe, it } from "node:test";
+import { expect } from "expect";
 import { DEFAULT_CONFIG, type CommitDisciplineConfig } from "../src/config.js";
 import { DisciplineError } from "../src/errors.js";
 import { detectTestCommand, runTests } from "../src/test-runner/test-runner.js";
@@ -96,7 +97,7 @@ describe("test execution", () => {
     } satisfies Partial<DisciplineError>);
   });
 
-  it.runIf(process.platform === "win32")("executes npm through the Windows command shim", async () => {
+  it("executes npm through the Windows command shim", { skip: process.platform !== "win32" }, async () => {
     const repository = await createTestRepository();
     repositories.push(repository);
     const config: CommitDisciplineConfig = {

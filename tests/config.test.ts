@@ -1,6 +1,7 @@
 import { writeFile } from "node:fs/promises";
 import path from "node:path";
-import { afterEach, describe, expect, it } from "vitest";
+import { afterEach, describe, it } from "node:test";
+import { expect } from "expect";
 import { DEFAULT_CONFIG, loadConfig, resolveStageLimits } from "../src/config.js";
 import { planTaskInputSchema } from "../src/domain/schemas.js";
 import { DisciplineError } from "../src/errors.js";

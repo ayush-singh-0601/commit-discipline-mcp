@@ -14,12 +14,27 @@ export interface TestDetectionResult {
 }
 
 export interface TestRunResult {
-  status: "passed" | "not-found";
+  status: "passed" | "not-found" | "not-run";
   displayCommand: string | null;
   durationMs: number;
   stdout: string;
   stderr: string;
   warnings: string[];
+}
+
+export async function previewTests(
+  repoRoot: string,
+  config: CommitDisciplineConfig,
+): Promise<TestRunResult> {
+  const detected = await detectTestCommand(repoRoot, config);
+  return {
+    status: detected.command ? "not-run" : "not-found",
+    displayCommand: detected.command ? formatCommand(detected.command) : null,
+    durationMs: 0,
+    stdout: "",
+    stderr: "",
+    warnings: detected.warnings,
+  };
 }
 
 async function exists(target: string): Promise<boolean> {

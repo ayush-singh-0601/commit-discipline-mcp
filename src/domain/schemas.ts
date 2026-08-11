@@ -69,6 +69,7 @@ export const planStateSchema = z
     baseCommit: z.string().regex(/^[0-9a-f]{40}$/),
     createdAt: z.string().datetime(),
     finishedAt: z.string().datetime().optional(),
+    warnings: z.array(z.string()).optional(),
     stages: z.array(stageStateSchema).min(2).max(4),
   })
   .strict();
