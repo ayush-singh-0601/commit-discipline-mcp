@@ -17,6 +17,7 @@ export interface RunCommandOptions {
   timeoutMs?: number;
   maxBufferBytes?: number;
   rejectOnNonZero?: boolean;
+  shell?: boolean | string;
 }
 
 export async function runCommand(
@@ -37,7 +38,7 @@ export async function runCommand(
         timeout: options.timeoutMs ?? 30_000,
         maxBuffer: options.maxBufferBytes ?? 10 * 1024 * 1024,
         windowsHide: true,
-        shell: false,
+        shell: options.shell ?? false,
       },
       (error, stdout, stderr) => {
         const exitCode = typeof error?.code === "number" ? error.code : error ? 1 : 0;
