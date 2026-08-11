@@ -46,7 +46,7 @@ function parseNumstat(source: string): Omit<StageDiff, "files"> {
   return { additions, deletions, lines: additions + deletions, binaryFiles };
 }
 
-export async function assertStageScope(repoRoot: string, selectedFiles: readonly string[]): Promise<void> {
+async function scopedStatuses(repoRoot: string, selectedFiles: readonly string[]) {
   const selected = new Set(selectedFiles);
   const statuses = (await getStatus(repoRoot)).filter((entry) => !isInternalStatePath(entry.path));
   const outside = statuses.flatMap((entry) => {
@@ -63,11 +63,15 @@ export async function assertStageScope(repoRoot: string, selectedFiles: readonly
   if (statuses.length === 0) {
     throw new DisciplineError("NO_CHANGES", "The active stage has no changes to commit.");
   }
+  return statuses;
+}
+
+export async function assertStageScope(repoRoot: string, selectedFiles: readonly string[]): Promise<void> {
+  await scopedStatuses(repoRoot, selectedFiles);
 }
 
 export async function inspectStageDiff(repoRoot: string, selectedFiles: readonly string[]): Promise<StageDiff> {
-  await assertStageScope(repoRoot, selectedFiles);
-  const statuses = (await getStatus(repoRoot)).filter((entry) => !isInternalStatePath(entry.path));
+  const statuses = await scopedStatuses(repoRoot, selectedFiles);
   const files = [...new Set(statuses.map((entry) => entry.path))].sort();
   const untracked = statuses
     .filter((status) => status.indexStatus === "?" && status.workTreeStatus === "?")

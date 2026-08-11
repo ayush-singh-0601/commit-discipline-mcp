@@ -3,7 +3,6 @@ import { commitStageInputSchema, type CommitStageInput, type PlanState } from ".
 import { DisciplineError } from "../errors.js";
 import { discoverRepoRoot, getHeadCommit, normalizeRepoPath } from "../git/repository.js";
 import {
-  assertStageScope,
   commitStagedFiles,
   evaluateDiffLimits,
   inspectStageDiff,
@@ -98,7 +97,6 @@ export async function commitStage(
   }
   const test = await runTests(repoRoot, config);
 
-  await assertStageScope(repoRoot, selectedFiles);
   const finalDiff = await inspectStageDiff(repoRoot, selectedFiles);
   const limitEvaluation = evaluateDiffLimits(finalDiff, { ...limits, enforcement: config.enforcement });
   await stageFiles(repoRoot, selectedFiles);
