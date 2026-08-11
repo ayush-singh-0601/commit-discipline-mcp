@@ -18,8 +18,8 @@ jobs:
         os: [windows-latest, ubuntu-latest, macos-latest]
         node: [18, 20, 22]
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
         with:
           node-version: ${{ matrix.node }}
           cache: npm
@@ -34,22 +34,23 @@ jobs:
       matrix:
         os: [windows-latest, ubuntu-latest, macos-latest]
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
         with:
           node-version: 22
           cache: npm
       - run: npm ci
       - run: npm run smoke:package
+      - run: npm pack --silent
       - if: runner.os == 'Windows'
         shell: pwsh
-        run: node bin/commit-discipline.js --help
+        run: npx.cmd --yes --package .\commit-discipline-mcp-0.1.0.tgz commit-discipline --help
       - if: runner.os == 'Windows'
         shell: cmd
-        run: node bin\commit-discipline.js --help
+        run: npx --yes --package .\commit-discipline-mcp-0.1.0.tgz commit-discipline --help
       - if: runner.os == 'Linux'
         shell: bash
-        run: node bin/commit-discipline.js --help
+        run: npx --yes --package ./commit-discipline-mcp-0.1.0.tgz commit-discipline --help
       - if: runner.os == 'macOS'
         shell: zsh {0}
-        run: node bin/commit-discipline.js --help
+        run: npx --yes --package ./commit-discipline-mcp-0.1.0.tgz commit-discipline --help

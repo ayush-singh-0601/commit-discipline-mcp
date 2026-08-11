@@ -1,0 +1,37 @@
+name: Registry smoke
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: Published version to verify
+        required: true
+        default: 0.1.0
+
+permissions:
+  contents: read
+
+jobs:
+  npx:
+    name: ${{ matrix.os }} registry smoke
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-latest, ubuntu-latest, macos-latest]
+    steps:
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+      - if: runner.os == 'Windows'
+        shell: pwsh
+        run: npx.cmd -y commit-discipline-mcp@${{ inputs.version }} --help
+      - if: runner.os == 'Windows'
+        shell: cmd
+        run: npx -y commit-discipline-mcp@${{ inputs.version }} --help
+      - if: runner.os == 'Linux'
+        shell: bash
+        run: npx -y commit-discipline-mcp@${{ inputs.version }} --help
+      - if: runner.os == 'macOS'
+        shell: zsh {0}
+        run: npx -y commit-discipline-mcp@${{ inputs.version }} --help
