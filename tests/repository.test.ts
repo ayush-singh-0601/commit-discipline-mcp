@@ -1,4 +1,4 @@
-import { mkdir, writeFile } from "node:fs/promises";
+import { mkdir, realpath, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { afterEach, describe, it } from "node:test";
 import { expect } from "expect";
@@ -32,7 +32,7 @@ describe("portable process and repository primitives", () => {
     const nested = path.join(repository.root, "nested", "folder");
     await mkdir(nested, { recursive: true });
 
-    await expect(discoverRepoRoot(nested)).resolves.toBe(path.resolve(repository.root));
+    await expect(discoverRepoRoot(nested)).resolves.toBe(await realpath(repository.root));
     await expect(getHeadCommit(repository.root)).resolves.toMatch(/^[0-9a-f]{40}$/);
   });
 
