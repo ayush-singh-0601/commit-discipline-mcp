@@ -27,6 +27,7 @@
     "test": "node scripts/run-tests.mjs",
     "verify": "npm run typecheck && npm test && npm run build",
     "smoke:package": "node scripts/package-smoke.mjs",
+    "benchmark:git": "npm run build && node scripts/benchmark-git.mjs",
     "prepack": "npm run build"
   },
   "dependencies": {

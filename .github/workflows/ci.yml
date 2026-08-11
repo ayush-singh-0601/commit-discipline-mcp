@@ -26,6 +26,22 @@ jobs:
       - run: npm ci
       - run: npm run verify
 
+  performance:
+    name: Git overhead (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-latest, ubuntu-latest, macos-latest]
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run benchmark:git
+
   package-smoke:
     name: Package smoke
     runs-on: ${{ matrix.os }}
