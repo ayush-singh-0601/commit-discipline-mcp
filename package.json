@@ -63,7 +63,7 @@
   },
   "devDependencies": {
     "@types/node": "18.19.130",
-    "@types/jest": "29.5.14",
+    "@types/jest": "30.0.0",
     "expect": "29.7.0",
     "typescript": "5.9.3"
   }
