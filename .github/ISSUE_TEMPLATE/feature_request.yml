@@ -1,0 +1,53 @@
+name: Feature request
+description: Propose a focused improvement to the commit-discipline workflow
+title: "feat: "
+labels:
+  - enhancement
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Strong proposals start with a concrete workflow problem. Please explain the use case before suggesting an API.
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem
+      description: What workflow is difficult or impossible today, and who is affected?
+    validations:
+      required: true
+
+  - type: textarea
+    id: example
+    attributes:
+      label: Concrete example
+      description: Show a repository shape, task, or command sequence that demonstrates the need.
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed behavior
+      description: Describe the smallest change that would solve the problem.
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+      description: Can configuration, stage design, or an existing command solve it?
+
+  - type: checkboxes
+    id: principles
+    attributes:
+      label: Project principles
+      options:
+        - label: This keeps the package local-first and telemetry-free.
+          required: true
+        - label: This does not require pushing or rewriting Git history.
+          required: true
+        - label: I searched existing issues, discussions, and the roadmap.
+          required: true
+

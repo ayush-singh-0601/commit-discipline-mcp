@@ -1,0 +1,98 @@
+name: Bug report
+description: Report reproducible incorrect behavior in the CLI, MCP server, or client setup
+title: "bug: "
+labels:
+  - bug
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to report a problem. Remove secrets and private source code from all examples and logs.
+
+  - type: input
+    id: version
+    attributes:
+      label: Package version
+      description: Run `npm view commit-discipline-mcp version` or provide the exact installed version.
+      placeholder: 0.1.0
+    validations:
+      required: true
+
+  - type: dropdown
+    id: interface
+    attributes:
+      label: Interface
+      options:
+        - Codex MCP
+        - Claude Code MCP
+        - Cursor MCP
+        - CLI
+        - Client initialization
+        - Other
+    validations:
+      required: true
+
+  - type: dropdown
+    id: operating-system
+    attributes:
+      label: Operating system
+      options:
+        - Windows
+        - macOS
+        - Linux
+        - Other
+    validations:
+      required: true
+
+  - type: input
+    id: environment
+    attributes:
+      label: Environment
+      description: Include Node.js, Git, shell, and coding-client versions.
+      placeholder: Node 22.14.0, Git 2.50.1, PowerShell 7.5, Codex ...
+    validations:
+      required: true
+
+  - type: textarea
+    id: description
+    attributes:
+      label: What happened?
+      description: Describe the observed behavior and its impact.
+    validations:
+      required: true
+
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Minimal reproduction
+      description: Provide exact commands and minimal disposable-repository contents.
+      render: shell
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+    validations:
+      required: true
+
+  - type: textarea
+    id: output
+    attributes:
+      label: Sanitized output
+      description: Remove tokens, credentials, private paths, and proprietary source code.
+      render: text
+
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Before submitting
+      options:
+        - label: I searched existing issues and discussions.
+          required: true
+        - label: I reproduced this with the latest published version.
+          required: true
+        - label: I removed credentials and private data.
+          required: true
+

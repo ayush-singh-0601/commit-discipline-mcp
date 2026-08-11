@@ -1,0 +1,9 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Usage questions and ideas
+    url: https://github.com/ayush-singh-0601/commit-discipline-mcp/discussions
+    about: Ask for help or discuss an idea before filing an actionable issue.
+  - name: Security vulnerability
+    url: https://github.com/ayush-singh-0601/commit-discipline-mcp/security/advisories/new
+    about: Report suspected vulnerabilities privately. Do not open a public issue.
+
