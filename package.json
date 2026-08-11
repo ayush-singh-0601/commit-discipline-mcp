@@ -4,10 +4,18 @@
   "description": "Plan and enforce small, test-gated Git commits through MCP or a CLI.",
   "keywords": [
     "mcp",
+    "mcp-server",
+    "model-context-protocol",
     "git",
+    "commit",
     "cli",
+    "developer-tools",
+    "ai-agents",
     "coding-agents",
-    "commit-workflow"
+    "commit-workflow",
+    "codex",
+    "claude-code",
+    "cursor"
   ],
   "author": "Ayush Singh",
   "type": "module",
