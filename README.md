@@ -20,6 +20,14 @@ npx -y commit-discipline-mcp init --client all --yes
 
 `init` creates project-scoped MCP configuration and a `commit-discipline` skill for Codex, Claude Code, and Cursor. Use `--dry-run` to preview, repeat `--client` to select clients, and use `--force` only to replace an existing conflicting entry. Existing configuration files are merged and backed up before updates.
 
+Generated project paths are:
+
+- Codex: `.codex/config.toml` and `.codex/skills/commit-discipline/SKILL.md`
+- Claude Code: `.mcp.json` and `.claude/skills/commit-discipline/SKILL.md`
+- Cursor: `.cursor/mcp.json` and `.cursor/skills/commit-discipline/SKILL.md`
+
+Automatic client detection uses Node's OS-native home-directory resolution and project-local indicators. Passing `--client` explicitly is deterministic and recommended for scripted setup.
+
 On Windows, generated stdio entries use `cmd.exe` to launch the npm shim. On macOS and Linux they invoke `npx` directly.
 
 ## Workflow
@@ -85,6 +93,8 @@ Defaults warn when a stage exceeds 15 files or 400 added/deleted lines. Set `enf
 
 Without explicit `testCommand`, the tool detects one JavaScript, Python, Go, Rust, or Make test ecosystem. If multiple ecosystems are present, configure the intended command explicitly. Missing `make` is treated as unavailable rather than as an error.
 
+On Windows, `make test` detection requires `make` on `PATH`. Install it with `choco install make`, use another Windows package manager, or run the repository through WSL. Native npm, pnpm, Yarn, Python, Go, and Cargo commands do not require Make.
+
 ## Safety model
 
 - Plans can only start from a clean worktree.
@@ -102,9 +112,14 @@ Without explicit `testCommand`, the tool detects one JavaScript, Python, Go, Rus
 npm ci
 npm run verify
 npm run smoke:package
+npm run benchmark:git
 ```
 
-The release gate runs type checking, 44+ unit/integration tests, a packed-package smoke test, and Node 18/20/22 jobs on `windows-latest`, `ubuntu-latest`, and `macos-latest`.
+The release gate runs type checking, 46+ unit/integration tests, a complete packed-package CLI/MCP lifecycle, native-shell `npx` checks, and Node 18/20/22 jobs on `windows-latest`, `ubuntu-latest`, and `macos-latest`.
+
+`benchmark:git` measures `commit_stage` overhead after subtracting the test command's own runtime, discards one warm-up sample, and reports the median of five repositories against the PRD's 300ms target. The report is intentionally visible rather than hidden behind a platform-dependent assertion: Git process startup varies substantially by OS, antivirus, filesystem, and CI host.
+
+After an npm release, the manually dispatched Registry smoke workflow verifies the exact registry command `npx -y commit-discipline-mcp@<version> --help` through PowerShell, cmd.exe, Bash, and Zsh.
 
 ## License
 
