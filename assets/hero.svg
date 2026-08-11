@@ -1,0 +1,56 @@
+<svg width="1200" height="360" viewBox="0 0 1200 360" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="title desc">
+  <title id="title">commit-discipline-mcp</title>
+  <desc id="desc">Plan, test, and commit coding agent work as small reviewable changes.</desc>
+  <defs>
+    <linearGradient id="background" x1="54" y1="22" x2="1144" y2="342" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#0B1020"/>
+      <stop offset="0.55" stop-color="#111B36"/>
+      <stop offset="1" stop-color="#0C2D2A"/>
+    </linearGradient>
+    <linearGradient id="accent" x1="260" y1="0" x2="940" y2="0" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#8B5CF6"/>
+      <stop offset="0.5" stop-color="#38BDF8"/>
+      <stop offset="1" stop-color="#34D399"/>
+    </linearGradient>
+    <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="22"/>
+    </filter>
+  </defs>
+
+  <rect width="1200" height="360" rx="24" fill="url(#background)"/>
+  <circle cx="190" cy="70" r="120" fill="#8B5CF6" fill-opacity="0.11" filter="url(#glow)"/>
+  <circle cx="1030" cy="300" r="140" fill="#34D399" fill-opacity="0.10" filter="url(#glow)"/>
+  <path d="M0 300C250 235 410 345 650 286C872 232 995 217 1200 274V360H0V300Z" fill="#FFFFFF" fill-opacity="0.025"/>
+
+  <g transform="translate(82 77)">
+    <rect width="82" height="82" rx="20" fill="#FFFFFF" fill-opacity="0.07" stroke="#FFFFFF" stroke-opacity="0.13"/>
+    <circle cx="24" cy="25" r="8" fill="#8B5CF6"/>
+    <circle cx="58" cy="41" r="8" fill="#38BDF8"/>
+    <circle cx="24" cy="58" r="8" fill="#34D399"/>
+    <path d="M31 27L51 38M31 55L51 44" stroke="#E2E8F0" stroke-width="5" stroke-linecap="round"/>
+  </g>
+
+  <text x="190" y="118" fill="#F8FAFC" font-family="Inter, Segoe UI, Arial, sans-serif" font-size="48" font-weight="750" letter-spacing="-1.5">commit-discipline-mcp</text>
+  <text x="84" y="203" fill="#CBD5E1" font-family="Inter, Segoe UI, Arial, sans-serif" font-size="25" font-weight="400">Small commits. Passing tests. Predictable agent workflows.</text>
+
+  <g transform="translate(84 246)" font-family="Inter, Segoe UI, Arial, sans-serif" font-size="16" font-weight="650">
+    <rect width="144" height="46" rx="23" fill="#8B5CF6" fill-opacity="0.14" stroke="#A78BFA" stroke-opacity="0.55"/>
+    <text x="72" y="29" fill="#DDD6FE" text-anchor="middle">01  PLAN</text>
+    <path d="M240 23H274" stroke="#64748B" stroke-width="2" stroke-linecap="round"/>
+    <path d="M268 17L275 23L268 29" stroke="#64748B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+
+    <g transform="translate(288)">
+      <rect width="144" height="46" rx="23" fill="#38BDF8" fill-opacity="0.12" stroke="#7DD3FC" stroke-opacity="0.55"/>
+      <text x="72" y="29" fill="#BAE6FD" text-anchor="middle">02  TEST</text>
+    </g>
+    <path d="M480 23H514" stroke="#64748B" stroke-width="2" stroke-linecap="round"/>
+    <path d="M508 17L515 23L508 29" stroke="#64748B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+
+    <g transform="translate(528)">
+      <rect width="170" height="46" rx="23" fill="#34D399" fill-opacity="0.12" stroke="#6EE7B7" stroke-opacity="0.55"/>
+      <text x="85" y="29" fill="#A7F3D0" text-anchor="middle">03  COMMIT</text>
+    </g>
+  </g>
+
+  <rect x="84" y="323" width="1032" height="3" rx="1.5" fill="url(#accent)" fill-opacity="0.82"/>
+</svg>
