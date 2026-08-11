@@ -1,4 +1,4 @@
-import { copyFile, mkdtemp, rm } from "node:fs/promises";
+import { copyFile, mkdtemp, readFile, rm } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import type { CommitDisciplineConfig } from "../config.js";
@@ -7,6 +7,7 @@ import { getStatus, runGit } from "./repository.js";
 
 export interface StageDiff {
   files: string[];
+  untrackedFiles: string[];
   additions: number;
   deletions: number;
   lines: number;
@@ -22,7 +23,7 @@ function isInternalStatePath(candidate: string): boolean {
   return candidate === ".commit-discipline/plan.json" || candidate.startsWith(".commit-discipline/.plan-");
 }
 
-function parseNumstat(source: string): Omit<StageDiff, "files"> {
+function parseNumstat(source: string): Omit<StageDiff, "files" | "untrackedFiles"> {
   let additions = 0;
   let deletions = 0;
   let binaryFiles = 0;
@@ -71,7 +72,7 @@ export async function inspectStageDiff(repoRoot: string, selectedFiles: readonly
     .map((status) => status.path);
   if (untracked.length === 0) {
     const diff = await runGit(repoRoot, ["diff", "--numstat", "HEAD", "--", ...selectedFiles]);
-    return { files, ...parseNumstat(diff.stdout) };
+    return { files, untrackedFiles: [], ...parseNumstat(diff.stdout) };
   }
 
   const temporary = await mkdtemp(path.join(os.tmpdir(), "commit-discipline-index-"));
@@ -88,7 +89,7 @@ export async function inspectStageDiff(repoRoot: string, selectedFiles: readonly
       true,
       env,
     );
-    return { files, ...parseNumstat(diff.stdout) };
+    return { files, untrackedFiles: untracked, ...parseNumstat(diff.stdout) };
   } finally {
     await rm(temporary, { recursive: true, force: true });
   }
@@ -118,8 +119,36 @@ export async function stageFiles(repoRoot: string, files: readonly string[]): Pr
   await runGit(repoRoot, ["add", "--", ...files]);
 }
 
-export async function commitStagedFiles(repoRoot: string, message: string): Promise<string> {
+export async function commitStagedFiles(
+  repoRoot: string,
+  message: string,
+  headReferencePath?: string,
+): Promise<string> {
   await runGit(repoRoot, ["commit", "-m", message]);
+  if (headReferencePath) {
+    const commitHash = (await readFile(headReferencePath, "utf8")).trim();
+    if (/^[0-9a-f]{40}$/.test(commitHash)) return commitHash;
+  }
+  const result = await runGit(repoRoot, ["rev-parse", "HEAD"]);
+  return result.stdout.trim();
+}
+
+export async function commitSelectedFiles(
+  repoRoot: string,
+  message: string,
+  files: readonly string[],
+  untrackedFiles: readonly string[],
+  headReferencePath?: string,
+): Promise<string> {
+  if (untrackedFiles.length > 0) {
+    await stageFiles(repoRoot, files);
+    return commitStagedFiles(repoRoot, message, headReferencePath);
+  }
+  await runGit(repoRoot, ["commit", "--include", "-m", message, "--", ...files]);
+  if (headReferencePath) {
+    const commitHash = (await readFile(headReferencePath, "utf8")).trim();
+    if (/^[0-9a-f]{40}$/.test(commitHash)) return commitHash;
+  }
   const result = await runGit(repoRoot, ["rev-parse", "HEAD"]);
   return result.stdout.trim();
 }

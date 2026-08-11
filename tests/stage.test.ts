@@ -37,7 +37,13 @@ describe("safe stage inspection", () => {
       "src/crlf.txt",
       "src/binary.bin",
     ]);
-    expect(diff).toMatchObject({ additions: 5, deletions: 0, lines: 5, binaryFiles: 1 });
+    expect(diff).toMatchObject({
+      additions: 5,
+      deletions: 0,
+      lines: 5,
+      binaryFiles: 1,
+      untrackedFiles: ["src/binary.bin", "src/crlf.txt", "src/new & file.txt"],
+    });
     expect(diff.files).toEqual([
       "baseline.txt",
       "src/binary.bin",
@@ -62,7 +68,14 @@ describe("safe stage inspection", () => {
   });
 
   it("warns or blocks according to enforcement mode", () => {
-    const diff = { files: ["a", "b"], additions: 8, deletions: 4, lines: 12, binaryFiles: 0 };
+    const diff = {
+      files: ["a", "b"],
+      untrackedFiles: [],
+      additions: 8,
+      deletions: 4,
+      lines: 12,
+      binaryFiles: 0,
+    };
     expect(evaluateDiffLimits(diff, { maxFiles: 1, maxLines: 10, enforcement: "warn" })).toMatchObject({
       exceeded: true,
       warnings: [expect.stringContaining("2 files"), expect.stringContaining("12 lines")],

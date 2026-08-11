@@ -12,6 +12,7 @@ export interface GitStatusEntry {
 export interface RepositoryContext {
   repoRoot: string;
   headCommit: string;
+  headReferencePath: string;
 }
 
 export async function runGit(
@@ -59,19 +60,33 @@ export async function discoverRepoRoot(cwd = process.cwd()): Promise<string> {
 }
 
 export async function discoverRepositoryContext(cwd = process.cwd()): Promise<RepositoryContext> {
-  const result = await runCommand("git", ["rev-parse", "--show-toplevel", "HEAD"], {
-    cwd,
-    rejectOnNonZero: false,
-  });
-  const [root, headCommit] = result.stdout.trim().split(/\r?\n/);
-  if (result.exitCode !== 0 || !root || !headCommit || !/^[0-9a-f]{40}$/.test(headCommit)) {
+  const result = await runCommand(
+    "git",
+    ["rev-parse", "--show-toplevel", "HEAD", "--git-common-dir", "--symbolic-full-name", "HEAD", "--git-path", "HEAD"],
+    { cwd, rejectOnNonZero: false },
+  );
+  const [root, headCommit, commonDirectory, headReference, headPath] = result.stdout.trim().split(/\r?\n/);
+  if (
+    result.exitCode !== 0 ||
+    !root ||
+    !headCommit ||
+    !commonDirectory ||
+    !headReference ||
+    !headPath ||
+    !/^[0-9a-f]{40}$/.test(headCommit)
+  ) {
     throw new DisciplineError(
       "NOT_GIT_REPOSITORY",
       `No Git repository with an initial commit found from ${cwd}.`,
       { cwd, stderr: result.stderr },
     );
   }
-  return { repoRoot: path.resolve(root), headCommit };
+  const repoRoot = path.resolve(root);
+  const headReferencePath =
+    headReference === "HEAD"
+      ? path.resolve(repoRoot, headPath)
+      : path.resolve(repoRoot, commonDirectory, ...headReference.split("/"));
+  return { repoRoot, headCommit, headReferencePath };
 }
 
 export async function getHeadCommit(repoRoot: string): Promise<string> {

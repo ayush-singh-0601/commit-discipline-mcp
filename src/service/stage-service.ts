@@ -3,10 +3,9 @@ import { commitStageInputSchema, type CommitStageInput, type PlanState } from ".
 import { DisciplineError } from "../errors.js";
 import { discoverRepoRoot, discoverRepositoryContext, getHeadCommit, normalizeRepoPath } from "../git/repository.js";
 import {
-  commitStagedFiles,
+  commitSelectedFiles,
   evaluateDiffLimits,
   inspectStageDiff,
-  stageFiles,
   type StageDiff,
 } from "../git/stage.js";
 import { readPlanState, writePlanState } from "../state/plan-store.js";
@@ -100,8 +99,13 @@ export async function commitStage(
 
   const finalDiff = test.status === "not-found" ? initialDiff : await inspectStageDiff(repoRoot, selectedFiles);
   const limitEvaluation = evaluateDiffLimits(finalDiff, { ...limits, enforcement: config.enforcement });
-  await stageFiles(repoRoot, selectedFiles);
-  const commitHash = await commitStagedFiles(repoRoot, validated.message);
+  const commitHash = await commitSelectedFiles(
+    repoRoot,
+    validated.message,
+    selectedFiles,
+    finalDiff.untrackedFiles,
+    repository.headReferencePath,
+  );
 
   stage.status = "completed";
   stage.commitHash = commitHash;

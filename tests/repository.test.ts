@@ -37,6 +37,7 @@ describe("portable process and repository primitives", () => {
     await expect(discoverRepositoryContext(nested)).resolves.toMatchObject({
       repoRoot: await realpath(repository.root),
       headCommit: expect.stringMatching(/^[0-9a-f]{40}$/),
+      headReferencePath: expect.stringContaining("refs"),
     });
     await expect(getHeadCommit(repository.root)).resolves.toMatch(/^[0-9a-f]{40}$/);
   });
