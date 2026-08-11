@@ -109,38 +109,36 @@ export async function detectTestCommand(
   }
 
   const candidates: DetectedTestCommand[] = [];
-  const javascript = await detectJavaScript(repoRoot);
+  const [javascript, hasPython, go, rust, makeManifest] = await Promise.all([
+    detectJavaScript(repoRoot),
+    detectManifest(
+      repoRoot,
+      ["pyproject.toml", "pytest.ini", "tox.ini", "setup.cfg"],
+      { command: "python", args: ["-m", "pytest"], source: "python" },
+    ),
+    detectManifest(repoRoot, ["go.mod"], {
+      command: "go",
+      args: ["test", "./..."],
+      source: "go",
+    }),
+    detectManifest(repoRoot, ["Cargo.toml"], {
+      command: "cargo",
+      args: ["test"],
+      source: "rust",
+    }),
+    detectManifest(repoRoot, ["Makefile", "makefile", "GNUmakefile"], {
+      command: "make",
+      args: ["test"],
+      source: "make",
+    }),
+  ]);
   if (javascript) candidates.push(javascript);
-
-  const hasPython = await detectManifest(
-    repoRoot,
-    ["pyproject.toml", "pytest.ini", "tox.ini", "setup.cfg"],
-    { command: "python", args: ["-m", "pytest"], source: "python" },
-  );
   if (hasPython) {
     const selected = await pythonCommand();
     if (selected) candidates.push({ ...selected, source: "python" });
   }
-
-  const go = await detectManifest(repoRoot, ["go.mod"], {
-    command: "go",
-    args: ["test", "./..."],
-    source: "go",
-  });
   if (go) candidates.push(go);
-
-  const rust = await detectManifest(repoRoot, ["Cargo.toml"], {
-    command: "cargo",
-    args: ["test"],
-    source: "rust",
-  });
   if (rust) candidates.push(rust);
-
-  const makeManifest = await detectManifest(repoRoot, ["Makefile", "makefile", "GNUmakefile"], {
-    command: "make",
-    args: ["test"],
-    source: "make",
-  });
   if (makeManifest && (await executableExists("make"))) candidates.push(makeManifest);
 
   if (candidates.length > 1) {
