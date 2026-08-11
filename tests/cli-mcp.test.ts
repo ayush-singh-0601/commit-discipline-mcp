@@ -1,7 +1,5 @@
 import { readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
-import { Client } from "@modelcontextprotocol/sdk/client/index.js";
-import { InMemoryTransport } from "@modelcontextprotocol/sdk/inMemory.js";
 import { afterEach, describe, it } from "node:test";
 import { expect } from "expect";
 import { runCli, type CliIo } from "../src/cli.js";
@@ -67,51 +65,57 @@ describe("MCP server", () => {
     const repository = await createTestRepository();
     repositories.push(repository);
     const server = createMcpServer(() => repository.root);
-    const client = new Client({ name: "test-client", version: "1.0.0" });
-    const [clientTransport, serverTransport] = InMemoryTransport.createLinkedPair();
-    await server.connect(serverTransport);
-    await client.connect(clientTransport);
+    const initialized = await server.handleMessage({
+      jsonrpc: "2.0",
+      id: 1,
+      method: "initialize",
+      params: { protocolVersion: "2025-06-18", capabilities: {}, clientInfo: { name: "test", version: "1" } },
+    });
+    expect(initialized?.result).toMatchObject({ capabilities: { tools: { listChanged: false } } });
 
-    try {
-      const tools = await client.listTools();
-      expect(tools.tools.map((tool) => tool.name).sort()).toEqual([
-        "commit_stage",
-        "finish_task",
-        "plan_task",
-        "task_status",
-      ]);
-      const result = await client.callTool({ name: "task_status", arguments: {} });
-      expect(result.isError).toBe(true);
-      expect(result.content).toEqual([
-        expect.objectContaining({ type: "text", text: expect.stringContaining("NO_ACTIVE_PLAN") }),
-      ]);
-    } finally {
-      await client.close();
-      await server.close();
-    }
+    const listed = await server.handleMessage({ jsonrpc: "2.0", id: 2, method: "tools/list" });
+    const listedResult = listed?.result as { tools: Array<{ name: string }> };
+    expect(listedResult.tools.map((tool) => tool.name).sort()).toEqual([
+      "commit_stage",
+      "finish_task",
+      "plan_task",
+      "task_status",
+    ]);
+    const called = await server.handleMessage({
+      jsonrpc: "2.0",
+      id: 3,
+      method: "tools/call",
+      params: { name: "task_status", arguments: {} },
+    });
+    expect(called?.result).toMatchObject({
+      isError: true,
+      content: [expect.objectContaining({ type: "text", text: expect.stringContaining("NO_ACTIVE_PLAN") })],
+    });
   });
 
   it("creates a plan through the protocol", async () => {
     const repository = await createTestRepository();
     repositories.push(repository);
     const server = createMcpServer(() => repository.root);
-    const client = new Client({ name: "test-client", version: "1.0.0" });
-    const [clientTransport, serverTransport] = InMemoryTransport.createLinkedPair();
-    await server.connect(serverTransport);
-    await client.connect(clientTransport);
+    const result = await server.handleMessage({
+      jsonrpc: "2.0",
+      id: 1,
+      method: "tools/call",
+      params: { name: "plan_task", arguments: { description: "MCP plan", stages } },
+    });
+    expect(result?.result).not.toMatchObject({ isError: true });
+    expect(await readFile(path.join(repository.root, ".commit-discipline", "plan.json"), "utf8")).toContain(
+      '"description": "MCP plan"',
+    );
+  });
 
-    try {
-      const result = await client.callTool({
-        name: "plan_task",
-        arguments: { description: "MCP plan", stages },
-      });
-      expect(result.isError).not.toBe(true);
-      expect(await readFile(path.join(repository.root, ".commit-discipline", "plan.json"), "utf8")).toContain(
-        '"description": "MCP plan"',
-      );
-    } finally {
-      await client.close();
-      await server.close();
-    }
+  it("returns JSON-RPC errors for malformed and unknown requests", async () => {
+    const server = createMcpServer();
+    await expect(server.handleMessage({ nope: true })).resolves.toMatchObject({
+      error: { code: -32600 },
+    });
+    await expect(
+      server.handleMessage({ jsonrpc: "2.0", id: "unknown", method: "other/method" }),
+    ).resolves.toMatchObject({ id: "unknown", error: { code: -32601 } });
   });
 });
