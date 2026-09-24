@@ -62,7 +62,7 @@
     "zod": "4.6.5"
   },
   "devDependencies": {
-    "@types/node": "26.5.1",
+    "@types/node": "26.6.2",
     "@types/jest": "29.5.14",
     "expect": "29.7.0",
     "typescript": "7.0.2"
